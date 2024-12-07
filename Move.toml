@@ -5,7 +5,7 @@ version = "1.0.0"
 authors = []
 
 [addresses]
-lending_addr = "0xfe109fbd672a7b1074d90305e05e9bdb33ae5c418001081aa6fd9739186d0a48"
+lending_addr = "0x1202bd0151993fd3556212f9f5178fc5239f933beca6389738a5b0872eeea4b1"
 
 [dependencies.SupraFramework]
 git = "https://github.com/Entropy-Foundation/aptos-core.git"

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Lending Protocol Testing</title>
+    <title>DeFi Lending Protocol Dashboard</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -51,11 +51,6 @@
             margin: 10px 0;
             border-left: 4px solid #3498db;
         }
-        .rate-info {
-            color: #2c3e50;
-            font-size: 14px;
-            margin: 5px 0;
-        }
         .calculation {
             background-color: #edf7ff;
             padding: 10px;
@@ -64,8 +59,12 @@
         }
         .warning {
             color: #e74c3c;
-            font-size: 14px;
+            font-weight: bold;
             margin-top: 5px;
+        }
+        .success {
+            color: #27ae60;
+            font-weight: bold;
         }
         .info-grid {
             display: grid;
@@ -87,10 +86,10 @@
         <h2>Current Rates & Information</h2>
         <div class="info-grid">
             <div class="info-item">
-                <strong>Lending APR:</strong> 8%
+                <strong>Lending Rate:</strong> 1% per minute
             </div>
             <div class="info-item">
-                <strong>Borrowing APR:</strong> 12%
+                <strong>Borrowing Rate:</strong> 2% per minute
             </div>
             <div class="info-item">
                 <strong>Collateral Ratio:</strong> 150%
@@ -99,6 +98,12 @@
                 <strong>DOGE Price:</strong> 0.1 USDT
             </div>
         </div>
+    </div>
+
+    <div class="section">
+        <h2>Account Information</h2>
+        <button onclick="copyCheckBalance()">Check USDT Balance</button>
+        <button onclick="copyCheckPoolInfo()">Check Pool Info</button>
     </div>
 
     <div class="section">
@@ -112,9 +117,9 @@
     </div>
 
     <div class="section">
-        <h2>2. Lending (Earn 8% APR)</h2>
+        <h2>2. Lending (1% per minute)</h2>
         <div class="info-box">
-            Deposit USDT to earn interest. Interest is calculated in real-time.
+            Deposit USDT to earn interest
         </div>
         <div>
             <input type="number" id="depositAmount" placeholder="Amount to deposit" oninput="calculateLendingReturns()">
@@ -130,9 +135,9 @@
     </div>
 
     <div class="section">
-        <h2>3. Borrowing (12% APR)</h2>
+        <h2>3. Borrowing (2% per minute)</h2>
         <div class="info-box">
-            Deposit DOGE as collateral to borrow USDT. Minimum 150% collateral required.
+            Deposit DOGE as collateral to borrow USDT
         </div>
         <div>
             <input type="number" id="collateralAmount" placeholder="DOGE collateral amount" oninput="calculateBorrowLimit()">
@@ -147,132 +152,127 @@
         <div class="calculation" id="borrowCalculation"></div>
 
         <div style="margin-top: 20px;">
+            <button onclick="copyCheckBorrowerInfo()">1. Check Your Current Position</button>
+            <div class="note">Shows collateral, borrowed amount, and current interest</div>
+        </div>
+
+        <div style="margin-top: 20px;">
             <input type="number" id="repayAmount" placeholder="USDT amount to repay">
             <button onclick="copyRepayCommand()">Repay Loan</button>
-        </div>
-        <button onclick="copyCheckBorrowerInfo()">Check Your Borrowing Position</button>
-        <div>
-            <button onclick="copyCheckRepaymentAmount()">Check Repayment Amount</button>
-            <div class="note">Shows total amount to repay, principal, and interest</div>
+            <div class="warning">Make sure you have enough USDT to repay!</div>
         </div>
     </div>
 
     <script>
-        const YOUR_ADDRESS = "0xfe109fbd672a7b1074d90305e05e9bdb33ae5c418001081aa6fd9739186d0a48";
-        const PROFILE_NAME = "supra5";
-
-        // Constants
-        const LENDING_APR = 8;
-        const BORROWING_APR = 12;
-        const COLLATERAL_RATIO = 150;
-        const DOGE_PRICE = 0.1;
-
-        function calculateLendingReturns() {
-            const amount = parseFloat(document.getElementById('depositAmount').value) || 0;
-            const yearlyInterest = amount * (LENDING_APR / 100);
-            const monthlyInterest = yearlyInterest / 12;
-            const dailyInterest = yearlyInterest / 365;
-
-            document.getElementById('lendingCalculation').innerHTML = `
-                <strong>Estimated Returns:</strong><br>
-                Daily Interest: ${dailyInterest.toFixed(4)} USDT<br>
-                Monthly Interest: ${monthlyInterest.toFixed(4)} USDT<br>
-                Yearly Interest: ${yearlyInterest.toFixed(4)} USDT
-            `;
-        }
-
-        function calculateBorrowLimit() {
-            const dogeAmount = parseFloat(document.getElementById('collateralAmount').value) || 0;
-            const collateralValue = dogeAmount * DOGE_PRICE;
-            const maxBorrow = (collateralValue * 100) / COLLATERAL_RATIO;
-
-            document.getElementById('collateralCalculation').innerHTML = `
-                <strong>Collateral Value:</strong><br>
-                ${dogeAmount} DOGE = ${collateralValue.toFixed(2)} USDT<br>
-                Maximum Borrowing Amount: ${maxBorrow.toFixed(2)} USDT<br>
-                <span class="warning">You must maintain at least 150% collateral ratio</span>
-            `;
-        }
-
-        function calculateRepayment() {
-            const borrowAmount = parseFloat(document.getElementById('borrowAmount').value) || 0;
-            const yearlyInterest = borrowAmount * (BORROWING_APR / 100);
-            const monthlyInterest = yearlyInterest / 12;
-            const dailyInterest = yearlyInterest / 365;
-
-            document.getElementById('borrowCalculation').innerHTML = `
-                <strong>Loan Details:</strong><br>
-                Daily Interest: ${dailyInterest.toFixed(4)} USDT<br>
-                Monthly Interest: ${monthlyInterest.toFixed(4)} USDT<br>
-                Yearly Interest: ${yearlyInterest.toFixed(4)} USDT<br>
-                <span class="warning">Total to repay will include principal + accrued interest</span>
-            `;
-        }
+        const YOUR_ADDRESS = "0x1202bd0151993fd3556212f9f5178fc5239f933beca6389738a5b0872eeea4b1";
+        const PROFILE_NAME = "supra6";
+        const RPC_URL = "https://rpc-testnet.supra.com";
 
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text);
             alert('Command copied! Paste it in your terminal');
         }
 
-        // [Previous command functions remain the same...]
+        function copyCheckBalance() {
+            const cmd = `supra move tool view --function-id '${YOUR_ADDRESS}::lending_protocol::get_balance' --args address:${YOUR_ADDRESS} --url ${RPC_URL}`;
+            copyToClipboard(cmd);
+        }
+
+        function copyCheckPoolInfo() {
+            const cmd = `supra move tool view --function-id '${YOUR_ADDRESS}::lending_protocol::get_pool_info' --url ${RPC_URL}`;
+            copyToClipboard(cmd);
+        }
+
         function copyInitPool() {
-            const cmd = `supra move tool run --function-id '${YOUR_ADDRESS}::lending_protocol::initialize_pool' --profile ${PROFILE_NAME} --url  https://rpc-testnet.supra.com`;
+            const cmd = `supra move tool run --function-id '${YOUR_ADDRESS}::lending_protocol::initialize_pool' --profile ${PROFILE_NAME} --url ${RPC_URL}`;
             copyToClipboard(cmd);
         }
 
         function copyInitLender() {
-            const cmd = `supra move tool run --function-id '${YOUR_ADDRESS}::lending_protocol::initialize_lender' --profile ${PROFILE_NAME} --url  https://rpc-testnet.supra.com`;
+            const cmd = `supra move tool run --function-id '${YOUR_ADDRESS}::lending_protocol::initialize_lender' --profile ${PROFILE_NAME} --url ${RPC_URL}`;
             copyToClipboard(cmd);
         }
 
         function copyInitBorrower() {
-            const cmd = `supra move tool run --function-id '${YOUR_ADDRESS}::lending_protocol::initialize_borrower' --profile ${PROFILE_NAME} --url  https://rpc-testnet.supra.com`;
+            const cmd = `supra move tool run --function-id '${YOUR_ADDRESS}::lending_protocol::initialize_borrower' --profile ${PROFILE_NAME} --url ${RPC_URL}`;
             copyToClipboard(cmd);
         }
 
         function copyDepositCommand() {
             const amount = document.getElementById('depositAmount').value;
-            const cmd = `supra move tool run --function-id '${YOUR_ADDRESS}::lending_protocol::deposit_usdt' --args u64:${amount} --profile ${PROFILE_NAME} --url  https://rpc-testnet.supra.com`;
+            const cmd = `supra move tool run --function-id '${YOUR_ADDRESS}::lending_protocol::deposit_usdt' --args u64:${amount} --profile ${PROFILE_NAME} --url ${RPC_URL}`;
             copyToClipboard(cmd);
         }
 
         function copyWithdrawCommand() {
             const amount = document.getElementById('withdrawAmount').value;
-            const cmd = `supra move tool run --function-id '${YOUR_ADDRESS}::lending_protocol::withdraw_usdt' --args u64:${amount} --profile ${PROFILE_NAME} --url  https://rpc-testnet.supra.com`;
+            const cmd = `supra move tool run --function-id '${YOUR_ADDRESS}::lending_protocol::withdraw_usdt' --args u64:${amount} --profile ${PROFILE_NAME} --url ${RPC_URL}`;
             copyToClipboard(cmd);
         }
 
         function copyCheckLenderInfo() {
-            const cmd = `supra move tool view --function-id '${YOUR_ADDRESS}::lending_protocol::get_lender_info' --args address:${YOUR_ADDRESS} --url  https://rpc-testnet.supra.com`;
+            const cmd = `supra move tool view --function-id '${YOUR_ADDRESS}::lending_protocol::get_lender_info' --args address:${YOUR_ADDRESS} --url ${RPC_URL}`;
             copyToClipboard(cmd);
         }
 
         function copyDepositCollateralCommand() {
             const amount = document.getElementById('collateralAmount').value;
-            const cmd = `supra move tool run --function-id '${YOUR_ADDRESS}::lending_protocol::deposit_collateral' --args u64:${amount} --profile ${PROFILE_NAME} --url  https://rpc-testnet.supra.com`;
+            const cmd = `supra move tool run --function-id '${YOUR_ADDRESS}::lending_protocol::deposit_collateral' --args u64:${amount} --profile ${PROFILE_NAME} --url ${RPC_URL}`;
             copyToClipboard(cmd);
         }
 
         function copyBorrowCommand() {
             const amount = document.getElementById('borrowAmount').value;
-            const cmd = `supra move tool run --function-id '${YOUR_ADDRESS}::lending_protocol::borrow_usdt' --args u64:${amount} --profile ${PROFILE_NAME} --url  https://rpc-testnet.supra.com`;
+            const cmd = `supra move tool run --function-id '${YOUR_ADDRESS}::lending_protocol::borrow_usdt' --args u64:${amount} --profile ${PROFILE_NAME} --url ${RPC_URL}`;
             copyToClipboard(cmd);
         }
 
         function copyRepayCommand() {
             const amount = document.getElementById('repayAmount').value;
-            const cmd = `supra move tool run --function-id '${YOUR_ADDRESS}::lending_protocol::repay_loan' --args u64:${amount} --profile ${PROFILE_NAME} --url  https://rpc-testnet.supra.com`;
+            const cmd = `supra move tool run --function-id '${YOUR_ADDRESS}::lending_protocol::repay_loan' --args u64:${amount} --profile ${PROFILE_NAME} --url ${RPC_URL}`;
             copyToClipboard(cmd);
         }
 
         function copyCheckBorrowerInfo() {
-            const cmd = `supra move tool view --function-id '${YOUR_ADDRESS}::lending_protocol::get_borrower_info' --args address:${YOUR_ADDRESS} --url  https://rpc-testnet.supra.com`;
+            const cmd = `supra move tool view --function-id '${YOUR_ADDRESS}::lending_protocol::get_borrower_info' --args address:${YOUR_ADDRESS} --url ${RPC_URL}`;
             copyToClipboard(cmd);
         }
-        function copyCheckRepaymentAmount() {
-    const cmd = `supra move tool view --function-id '${YOUR_ADDRESS}::lending_protocol::calculate_repayment_amount' --args address:${YOUR_ADDRESS} --url https://rpc-testnet.supra.com`;
-    copyToClipboard(cmd);
-}
+
+        function calculateLendingReturns() {
+            const amount = parseFloat(document.getElementById('depositAmount').value) || 0;
+            const minuteInterest = amount * 0.01; // 1% per minute
+            
+            document.getElementById('lendingCalculation').innerHTML = `
+                <strong>Estimated Returns:</strong><br>
+                Per Minute Interest: ${minuteInterest.toFixed(2)} USDT<br>
+                <span class="warning">Interest is calculated and compounded every minute</span>
+            `;
+        }
+
+        function calculateBorrowLimit() {
+            const dogeAmount = parseFloat(document.getElementById('collateralAmount').value) || 0;
+            const collateralValue = dogeAmount * 0.1; // DOGE price is 0.1 USDT
+            const maxBorrow = (collateralValue * 100) / 150; // 150% collateral ratio
+
+            document.getElementById('collateralCalculation').innerHTML = `
+                <strong>Collateral Value:</strong><br>
+                ${dogeAmount} DOGE = ${collateralValue.toFixed(2)} USDT<br>
+                Maximum Borrowing Amount: ${maxBorrow.toFixed(2)} USDT<br>
+                <span class="warning">Must maintain 150% collateral ratio</span>
+            `;
+        }
+
+        function calculateRepayment() {
+            const borrowAmount = parseFloat(document.getElementById('borrowAmount').value) || 0;
+            const minuteInterest = borrowAmount * 0.02; // 2% per minute
+            
+            document.getElementById('borrowCalculation').innerHTML = `
+                <strong>Loan Details:</strong><br>
+                Principal: ${borrowAmount.toFixed(2)} USDT<br>
+                Interest per Minute: ${minuteInterest.toFixed(2)} USDT<br>
+                <span class="warning">Interest accumulates every minute</span>
+            `;
+        }
     </script>
 </body>
 </html>
