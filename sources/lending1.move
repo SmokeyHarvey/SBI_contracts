@@ -122,24 +122,21 @@ module lending_addr::lending_protocol {
     }
 
     // Calculate borrow interest (per minute)
-fun calculate_borrow_interest(amount: u64, start_time: u64): u64 {
-    if (amount == 0 || start_time == 0) return 0;
-    
-    let current_time = timestamp::now_seconds();
-    let time_elapsed = current_time - start_time;
-    
-    // Convert seconds to exact minutes
-    let minutes: u128 = (time_elapsed as u128) / 60;
-    let principal: u128 = (amount as u128);
-    
-    // 2% = 0.02 per minute, scaled by 1000000 for precision
-    let rate: u128 = 20000; // 0.02 * 1000000
-    
-    // Calculate: principal * rate * minutes / 1000000
-    let interest = (principal * rate * minutes) / 1000000;
-    
-    (interest as u64)
-}
+    fun calculate_borrow_interest(amount: u64, start_time: u64): u64 {
+        if (amount == 0 || start_time == 0) return 0;
+        
+        let current_time = timestamp::now_seconds();
+        let time_elapsed = current_time - start_time;
+        
+        let minutes_elapsed: u128 = (time_elapsed as u128) / 60;
+        
+        let principal: u128 = (amount as u128) * PRECISION_FACTOR;
+        let rate: u128 = (BORROWING_APR as u128) * PRECISION_FACTOR / 100; // 2% per minute
+        
+        let interest = ((principal * rate * minutes_elapsed) / (PRECISION_FACTOR * PRECISION_FACTOR)) * INTEREST_SCALE;
+        
+        (interest as u64)
+    }
 
     // Deposit USDT to earn interest
     public entry fun deposit_usdt(
