@@ -1,0 +1,15 @@
+
+[package]
+name = "lending"
+version = "1.0.0"
+authors = []
+
+[addresses]
+lending_addr = "0xfe109fbd672a7b1074d90305e05e9bdb33ae5c418001081aa6fd9739186d0a48"
+
+[dependencies.SupraFramework]
+git = "https://github.com/Entropy-Foundation/aptos-core.git"
+rev = "dev"
+subdir = "aptos-move/framework/supra-framework"
+
+[dev-dependencies]
