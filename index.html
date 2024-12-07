@@ -81,7 +81,17 @@
 </head>
 <body>
     <h1>DeFi Lending Protocol Dashboard</h1>
-    
+    <div class="section">
+        <h2>Current Market Data</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <div id="currentDogePrice"><strong>DOGE Price:</strong> Loading...</div>
+            </div>
+            <div class="info-item">
+                <strong>Last Updated:</strong> <span id="lastUpdate"></span>
+            </div>
+        </div>
+    </div>
     <div class="section">
         <h2>Current Rates & Information</h2>
         <div class="info-grid">
@@ -167,7 +177,65 @@
         const YOUR_ADDRESS = "0x1202bd0151993fd3556212f9f5178fc5239f933beca6389738a5b0872eeea4b1";
         const PROFILE_NAME = "supra6";
         const RPC_URL = "https://rpc-testnet.supra.com";
+        // Add at the start of script section
+let dogePrice = 0;
+const ws = new WebSocket('wss://prod-socket-server.wss-cerberus.supra.com/ws');
 
+ws.onopen = function() {
+    console.log('Connected to Supra WebSocket');
+    ws.send(JSON.stringify({
+        "action": "subscribe",
+        "channels": [
+            {
+                "name": "dora",
+                "tradingPairs": ["doge_usdt", "2"]
+            }
+        ]
+    }));
+};
+
+ws.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    if (data.event === "dora" && data.payload && data.payload[0]) {
+        dogePrice = data.payload[0].price;
+        // Update any visible price displays
+        updatePriceDisplays();
+        // Recalculate if there's an amount in the collateral input
+        const collateralAmount = document.getElementById('collateralAmount').value;
+        if (collateralAmount) {
+            calculateBorrowLimit();
+        }
+    }
+};
+
+ws.onerror = function(error) {
+    console.error('WebSocket Error:', error);
+};
+
+// Add this function to update price displays
+function updatePriceDisplays() {
+    // Update price in the info section
+    document.getElementById('currentDogePrice').innerHTML = 
+        `<strong>DOGE Price:</strong> ${dogePrice.toFixed(4)} USDT`;
+    
+    // Update any calculations that depend on the price
+    calculateBorrowLimit();
+}
+
+// Modify calculateBorrowLimit to use live price
+function calculateBorrowLimit() {
+    const dogeAmount = parseFloat(document.getElementById('collateralAmount').value) || 0;
+    const collateralValue = dogeAmount * dogePrice;
+    const maxBorrow = (collateralValue * 100) / 150;
+
+    document.getElementById('collateralCalculation').innerHTML = `
+        <strong>Collateral Details:</strong><br>
+        Current DOGE Price: ${dogePrice.toFixed(4)} USDT<br>
+        ${dogeAmount} DOGE = ${collateralValue.toFixed(2)} USDT<br>
+        Maximum Borrowing Amount: ${maxBorrow.toFixed(2)} USDT<br>
+        <span class="warning">Must maintain 150% collateral ratio</span>
+    `;
+}
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text);
             alert('Command copied! Paste it in your terminal');
